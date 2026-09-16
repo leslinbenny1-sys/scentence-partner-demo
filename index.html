@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scentence Partner Portal — V1 Demo</title>
+<style>
+:root{--bg:#0c0a0b;--card:#151214;--line:#30292d;--text:#f5efe9;--muted:#aaa0a4;--gold:#d5ad68;--danger:#d97979}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#090808,#171114);color:var(--text);font-family:Inter,Arial,sans-serif}
+.wrap{max-width:1100px;margin:auto;padding:24px}.brand{letter-spacing:.28em;font-size:13px;color:var(--gold);text-align:center;margin:14px 0 5px}.tag{text-align:center;color:var(--muted);font-size:12px;margin-bottom:26px}
+.card{background:rgba(21,18,20,.94);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 20px 60px #0008}
+.login{max-width:430px;margin:8vh auto}.login h1{font-family:Georgia,serif;font-weight:500;text-align:center;margin:4px 0 8px;font-size:34px}.sub{text-align:center;color:var(--muted);margin-bottom:22px}
+label{display:block;font-size:12px;color:#c9bfc2;margin:14px 0 7px}input,select{width:100%;padding:13px 14px;border-radius:10px;border:1px solid var(--line);background:#0f0d0e;color:var(--text);outline:none}button{border:0;border-radius:10px;padding:13px 16px;background:var(--gold);color:#17100b;font-weight:700;cursor:pointer;width:100%;margin-top:16px}.ghost{background:transparent;color:var(--gold);border:1px solid #6b573b}.error{color:var(--danger);font-size:12px;margin-top:12px;text-align:center}.demo{font-size:11px;color:#80777a;text-align:center;margin-top:16px}
+header{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:20px}header .brand{text-align:left;margin:0}header button{width:auto;margin:0;padding:9px 13px}.title{font-family:Georgia,serif;font-size:31px;margin:5px 0}.muted{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{background:#121012;border:1px solid var(--line);border-radius:14px;padding:17px}.stat small{color:var(--muted)}.stat b{display:block;font-size:25px;margin-top:8px}
+.two{display:grid;grid-template-columns:1.3fr .7fr;gap:14px;margin-top:14px}.section h3{margin:0 0 14px;font-family:Georgia,serif;font-weight:500}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line)}.table th{color:#bdb2b5;font-weight:500}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#242025;color:#d8c2a0;font-size:11px}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.actions button{margin:0}.hidden{display:none}
+.notice{border:1px solid #59472f;background:#211a12;color:#d9c49d;border-radius:12px;padding:12px;font-size:12px;margin-bottom:15px}
+@media(max-width:760px){.wrap{padding:15px}.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.actions{grid-template-columns:1fr}.title{font-size:26px}}
+</style>
+</head>
+<body>
+<div id="app" class="wrap"></div>
+<script>
+const demoUsers={
+ "owner":{"password":"scentence123","name":"Leslin","role":"OWNER","id":"OWNER"},
+ "celin":{"password":"scentence123","name":"Celin","role":"MANAGER","id":"MANAGER"},
+ "kevin":{"password":"kevin123","name":"Kevin","role":"PARTNER","id":"SP001"}
+};
+const orders=[
+ {id:"SC1007",partner:"SP001",customer:"Arun",product:"50ml",qty:1,amount:999,status:"Paid"},
+ {id:"SC1006",partner:"SP001",customer:"Maya",product:"Discovery",qty:2,amount:998,status:"Shipped"},
+ {id:"SC1005",partner:"SP002",customer:"Nikhil",product:"50ml",qty:1,amount:999,status:"Paid"},
+ {id:"SC1004",partner:"SP003",customer:"Anu",product:"50ml",qty:2,amount:1998,status:"Delivered"},
+ {id:"SC1003",partner:"SP004",customer:"Riya",product:"Discovery",qty:1,amount:499,status:"Paid"}
+];
+let current=null;
+function login(){
+ const u=document.getElementById('user').value.trim().toLowerCase(),p=document.getElementById('pass').value;
+ const x=demoUsers[u];
+ if(!x||x.password!==p){document.getElementById('err').textContent="Demo login not recognised.";return}
+ current=x; render();
+}
+function logout(){current=null;render();}
+function stat(label,value){return `<div class="stat"><small>${label}</small><b>${value}</b></div>`}
+function render(){
+ const a=document.getElementById('app');
+ if(!current){a.innerHTML=`<div class="card login">
+ <div class="brand">SCENTENCE</div><div class="tag">PARTNER PORTAL · V1 DEMO</div>
+ <h1>Welcome</h1><div class="sub">A private sales network for Scentence Partners</div>
+ <label>Login ID</label><input id="user" placeholder="owner / celin / kevin">
+ <label>Password</label><input id="pass" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
+ <button onclick="login()">LOGIN</button><div id="err" class="error"></div>
+ <div class="demo">Demo accounts: owner / scentence123 · celin / scentence123 · kevin / kevin123</div>
+ </div>`;return}
+ const isOwner=current.role==="OWNER", isManager=current.role==="MANAGER";
+ const mine=isOwner?orders:(isManager?orders:orders.filter(o=>o.partner===current.id));
+ const total=mine.reduce((s,o)=>s+o.amount,0), qty=mine.reduce((s,o)=>s+o.qty,0);
+ const commission=mine.filter(o=>o.product==="50ml"&&o.status!=="Cancelled").reduce((s,o)=>s+100*o.qty,0);
+ a.innerHTML=`<header><div><div class="brand">SCENTENCE</div><div class="title">${isOwner?"Owner Dashboard":isManager?"Manager Dashboard":current.name+" · Partner Dashboard"}</div><div class="muted">${current.role} · ${current.id}</div></div><button onclick="logout()">Logout</button></header>
+ ${isOwner?`<div class="notice">OWNER VIEW — This V1 demo shows the kind of complete visibility you will have. Production login/database should be connected before using real customer data.</div>`:""}
+ <div class="grid">
+ ${stat(isOwner?"Total Partners":"Your Orders",isOwner?"4":mine.length)}
+ ${stat("Sales","₹"+total.toLocaleString("en-IN"))}
+ ${stat("Units",qty)}
+ ${stat(isOwner?"Commission Payable":"Commission","₹"+commission.toLocaleString("en-IN"))}
+ </div>
+ <div class="two">
+ <div class="card section"><h3>${isOwner?"Recent Network Orders":"Your Recent Orders"}</h3>
+ <table class="table"><thead><tr><th>Order</th><th>Partner</th><th>Product</th><th>Amount</th><th>Status</th></tr></thead>
+ <tbody>${mine.map(o=>`<tr><td>${o.id}</td><td>${o.partner}</td><td>${o.product} × ${o.qty}</td><td>₹${o.amount}</td><td><span class="pill">${o.status}</span></td></tr>`).join("")}</tbody></table></div>
+ <div class="card section"><h3>Quick actions</h3><div class="actions"><button onclick="alert('V1 demo: Order form coming next')">New Order</button><button class="ghost" onclick="alert('V1 demo: Customer database coming next')">Customers</button><button class="ghost" onclick="alert('V1 demo: Reports coming next')">Reports</button></div></div>
+ </div>
+ ${isOwner?`<div class="card section" style="margin-top:14px"><h3>Partner Network</h3><table class="table"><thead><tr><th>ID</th><th>Partner</th><th>Status</th><th>Sample Sales</th></tr></thead><tbody>
+ <tr><td>SP001</td><td>Kevin</td><td><span class="pill">Active</span></td><td>2 orders</td></tr><tr><td>SP002</td><td>Ajin</td><td><span class="pill">Active</span></td><td>1 order</td></tr><tr><td>SP003</td><td>Alex</td><td><span class="pill">Active</span></td><td>1 order</td></tr><tr><td>SP004</td><td>Emil</td><td><span class="pill">Active</span></td><td>1 order</td></tr>
+ </tbody></table></div>`:""}`;
+}
+render();
+</script>
+</body>
+</html>
